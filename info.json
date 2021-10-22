@@ -1,0 +1,8 @@
+{
+  "author": ["Fae"],
+  "install_msg": "Thanks for adding my repo!\n\nUse `[p]cog list fae` to see all avaliable cogs.",
+  "name": "Fae Cogs",
+  "short": "Various cogs",
+  "description": "Cogs that I make when I get annoyed about manually keeping track of various things.",
+  "tags": ["roles", "scheduling", "organization"]
+}
