@@ -1,0 +1,9 @@
+{
+  "author": ["FaeFox"],
+  "install_msg": "Thank you for installing the TimeRoles cog!\nUse `[p]help TimeRoles` to get all commands.",
+  "name": "TimeRoles",
+  "short": "Remove roles and colors at scheduled times.",
+  "description": "Remove roles and role colors at specified times.",
+  "tags": ["tools", "utility", "roles", "scheduling"],
+  "end_user_data_statement": "This cog temporarily stores user IDs while a temporary role or color is assigned."
+}
