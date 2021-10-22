@@ -1,8 +1,8 @@
 # fae-cogs
 Cogs that I make when I get annoyed about manually keeping track of various things. Made for Red v3.
 
-## Installation
-Add this repo with `[p]repo add fae-cogs https://github.com/FaeFox/fae-cogs/`
+# Installation
+Add this repo with `[p]repo add fae-cogs https://github.com/FaeFox/fae-cogs/`<br>
 Add a cog from this repo with `[p]cog install fae-cogs (cog name)`
 
 # Contact
