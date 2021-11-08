@@ -1,0 +1,9 @@
+{
+    "author": ["FaeFox"],
+    "install_msg": "Thank you for installing SelectRoles!\nUse `[p]help SelectRoles` to get all commands.",
+    "name": "SelectRoles",
+    "short": "Create self-role menus.",
+    "description": "Create self-role menus using Discord selects.",
+    "tags": ["tools", "utility", "roles", "select", "menu"],
+    "end_user_data_statement": "This cog does not store end-user data."
+}
