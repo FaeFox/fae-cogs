@@ -7,7 +7,7 @@ import re
 from redbot.core import Config, checks, commands
 from redbot.core.utils.menus import menu, DEFAULT_CONTROLS
 
-__author__ = "FaeraFox"
+__author__ = "FaeFox"
 
 class TimeRoles(commands.Cog):
     """Grant temporary roles."""
@@ -376,6 +376,11 @@ class TimeRoles(commands.Cog):
                 for grant in grants:
                     try:
                         if int(time.time()) >= int(grant["expiration"]):
+                            # Handle Legacy
+                            try:
+                                grant["color_grant"]
+                            except KeyError:
+                                grant["color_grant"] = None
                             if grant["color_grant"] == None:
                                 grant = await self.remove_grant_role(grant)
                             else:
