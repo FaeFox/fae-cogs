@@ -194,5 +194,5 @@ class SelectRoles(Cog):
             #else:
             #    await ctx.send(f"Your formatting was correct, however a value you input was not valid.")
             await ctx.send(error)
-        except:
-            await ctx.send(f"Invalid formatting, please use `{ctx.clean_prefix}help selectrole` for an example of how to format your message.\nDetails:\n {error_str}")
+        except Exception as e:
+            await ctx.send(f"Invalid formatting, please use `{ctx.clean_prefix}help selectrole` for an example of how to format your message.\nDetails:\n {error_str}\nDebug:{e}")
