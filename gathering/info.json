@@ -1,0 +1,15 @@
+{
+    "author": ["FaeFox (Fae#0009)"],
+    "install_msg": "Thanks for installing Gathering! Please ensure that your bot has the applications.commands permission (granted from the discord developer portal before inviting your bot).\nThis cog contains slash command(s).\n\nNOTE: Discord may take up to an hour to register slash commands.",
+    "name": "Gathering",
+    "short": "Create a list of items for members to add or remove from.",
+    "description": "Create a list of items for members to add or remove from. Originally made with FFXIV Free Company gathering in mind.",
+    "tags": [
+        "slash",
+        "dpy2",
+        "utility",
+        "ffxiv",
+        "list"
+    ],
+    "end_user_data_statement": "This cog may store data such as member IDs in order to track member list contribution."
+}
