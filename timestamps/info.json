@@ -1,0 +1,14 @@
+{
+    "author": ["FaeFox (Fae#0009)"],
+    "install_msg": "Thanks for installing TimeStamps! Please ensure that your bot has the applications.commands permission (granted from the discord developer portal).\nThis cog contains only slash command(s).\n\nNOTE: Discord may take up to an hour to register slash commands.",
+    "name": "TimeStamps",
+    "short": "Create Discord timestamps.",
+    "description": "Create Discord timestamps that automatically update based on the viewer's time zone.",
+    "tags": [
+        "slash",
+        "dpy2",
+        "utility",
+        "timestamps"
+    ],
+    "end_user_data_statement": "This cog does not persistently store any data or metadata about users."
+}
