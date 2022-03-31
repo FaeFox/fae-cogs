@@ -11,5 +11,6 @@
         "ffxiv",
         "list"
     ],
+    "min_bot_version" : "3.5.0.dev1",
     "end_user_data_statement": "This cog may store data such as member IDs in order to track member list contribution."
 }
