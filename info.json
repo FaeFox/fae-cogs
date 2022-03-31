@@ -1,8 +1,8 @@
 {
-  "author": ["Fae"],
-  "install_msg": "Thanks for adding my repo!\n\nUse `[p]cog list fae` to see all avaliable cogs.",
+  "author": ["FaeFox (Fae#0009)"],
+  "install_msg": "Thanks for adding my repo!\n\nUse `[p]cog list fae-cogs` to see all avaliable cogs.",
   "name": "Fae Cogs",
-  "short": "Various cogs",
+  "short": "Various cogs made by some stupid fox",
   "description": "Cogs that I make when I get annoyed about manually keeping track of various things.",
-  "tags": ["roles", "scheduling", "organization"]
+  "tags": ["roles", "scheduling", "automation", "organization", "dpy2", "slash"]
 }
