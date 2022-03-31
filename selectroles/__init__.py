@@ -1,4 +1,5 @@
-from .selectroles import SelectRoles
+from redbot.core.bot import Red
+from .textcommands import SelectRoles
 
-def setup(bot):
+def setup(bot: Red) -> None:
     bot.add_cog(SelectRoles(bot))
