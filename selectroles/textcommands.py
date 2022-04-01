@@ -2,7 +2,6 @@ import asyncio
 import discord
 
 from typing import Any
-from discord.utils import get
 
 from redbot.core import commands
 
@@ -106,7 +105,7 @@ class SelectView(discord.ui.View):
 
 class SelectRoles(Cog):
     """
-    Track Gathered Items
+    Self-assignable role system.
     """
 
     def __init__(self, bot: Red):
@@ -114,7 +113,7 @@ class SelectRoles(Cog):
 
     @commands.command()
     @commands.guild_only()
-    async def selectroles(self, ctx: commands.Context, *, role_message: str = None):
+    async def selectroles(self, ctx: commands.Context, *, role_message: str):
         """
         Create a menu for members to select roles from.
 
@@ -178,10 +177,5 @@ class SelectRoles(Cog):
                 "rem_description": info_split[3],
                 "emoji": emoji
             })
-            #options.append(SelectOption(label= info_split[0], value=f"sra|{info_split[1]}", description=info_split[2], emoji=emoji))
-            #remove_options.append(SelectOption(label= info_split[0], value=f"srr|{info_split[1]}", description=info_split[3], emoji=emoji))
         max_values = len(options)
-        #components = [Select(placeholder= add_placeholder, options= options, max_values= max_values), Select(placeholder= remove_placeholder, options= remove_options, max_values= max_values)]
-        #await ctx.send(f"> {msg_title}", components = components)
-        #await self.config.selectdata.set(options)
         await ctx.send(f"> {msg_title}", view=SelectView())
