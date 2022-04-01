@@ -136,7 +136,7 @@ class Gathering(Cog):
     @commands.group(autohelp=True)
     @commands.guild_only()
     async def list(self, ctx):
-        """Quest System"""
+        """Create a gathering list."""
         pass
 
     @commands.mod()
@@ -196,7 +196,7 @@ class Gathering(Cog):
                 await msg.edit(embed=embed)
         embed=discord.Embed(
             title="Data Reset.",
-            description=f"Please send a properly formatted message to create a new list. If you don't know the correct formatting, you can use `,help list create`. This command will time out in 30 seconds.", 
+            description=f"Please send a properly formatted message to create a new list. If you don't know the correct formatting, you can use `{ctx.clean_prefix}help list create`. This command will time out in 30 seconds.", 
             color=0x00ff00
         )
         await msg.edit(embed=embed)
@@ -236,7 +236,7 @@ class Gathering(Cog):
             color=0x00ff00
         )
         await msg.edit(embed=embed)
-        time.sleep(1)
+        await asyncio.sleep(1)
         invalid_format = await self.check_format(list_str)
         if invalid_format != "None":
             embed=discord.Embed(
@@ -264,9 +264,9 @@ class Gathering(Cog):
         category_count = len(category_lists)
         link = await self.config.guild(ctx.guild).teamcraft()
         if link != "":
-            embed=discord.Embed(title="Production List", description=f"Use `,add (amount) (item name)` to add items or `,remove (amount) (item name)` to remove items from the list.\n\nExample: `,add 187 copper ore`\n\n[Teamcraft Link]({link})")
+            embed=discord.Embed(title="Production List", description=f"Please type `/list` to see avaliable commands.\n\n[Teamcraft Link]({link})")
         else:
-            embed=discord.Embed(title="Production List", description=f"Use `,add (amount) (item name)` to add items or `,remove (amount) (item name)` to remove items from the list.\n\nExample: `,add 187 copper ore`")
+            embed=discord.Embed(title="Production List", description=f"Please type `/list` to see avaliable commands.")
         loopnum = 0
         needed_list = []
         while loopnum < category_count:
