@@ -46,6 +46,8 @@ class Gathering(Cog):
     """
     Track Gathered Items
     """
+    def __init__(self, bot):
+        self.bot = bot
 
     @commands.command()
     @commands.guild_only()
