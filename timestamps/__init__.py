@@ -5,7 +5,7 @@ from discord import app_commands
 from redbot.core.bot import Red
 from redbot.core.errors import CogLoadError
 
-from .commands import timestamps
+from .timestamps import timestamps
 
 bot_id = None #949857998753366056
 test_guild = None #779821183285461052
