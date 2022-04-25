@@ -23,6 +23,7 @@ config = Config.get_conf(
 # some idiot named Fae decided to store data in a stupid way that makes no sense. Why...
 # could have used dictionaries to make everything easy and readable but NOoO of course not
 config.register_guild(
+    manage_list=0,
     names=[],
     needed=[],
     gathered=[],
@@ -42,12 +43,19 @@ config.register_member(
 )
 
 
-class Gathering(Cog):
+class Gathering(commands.Cog):
     """
     Track Gathered Items
     """
     def __init__(self, bot):
         self.bot = bot
+
+    @commands.command()
+    @commands.guild_only()
+    @commands.admin()
+    async def setlistmanager(self, ctx: commands.Context, role: discord.Role):
+        await config.guild(ctx.guild).manage_list.set(role.id)
+        await ctx.send(f"Done. {role.mention} will now be able to manage lists using `/list create`.")
 
     @commands.command()
     @commands.guild_only()
@@ -130,118 +138,40 @@ class Gathering(Cog):
         if list:
             await menu(ctx, list, DEFAULT_CONTROLS)
 
-    @commands.group(autohelp=True)
-    @commands.guild_only()
-    async def list(self, ctx):
-        """Create a gathering list."""
-        pass
+class ListModal(discord.ui.Modal, title="Create Gathering List"):
+    confirm_num = random.randint(1000, 9999)
+    list_str = discord.ui.TextInput(
+        label="Please submit a properly formatted string:",
+        style=discord.TextStyle.paragraph,
+        placeholder="category:Important Items\nPeacock Ore*927\nLignum Vitae Logs*1800\ncategory:Cheap Items\nGold Ore*87",
+        min_length=10,
+        max_length=3900
+    )
+    teamcraft_link = discord.ui.TextInput(label="Link to external list (optional):", style=discord.TextStyle.short, required=False, placeholder="i.e. https://ffxivteamcraft.com/list")
+    confirm_message = discord.ui.TextInput(label=f"Type {confirm_num} to confirm:", style=discord.TextStyle.short, placeholder=f"⚠️ This will make all previous lists invalid!", min_length=4, max_length=4)
 
-    @commands.mod()
-    @list.command(name="create")
-    async def list_create(self, ctx: commands.Context, *, list_str: str=None):
-        """
-        Create a gathering list.
-        Format:
-        ```category:(category name)
-        (item name)*(amount needed)```
-
-        The maximum number of categories is 24, and maximum character count is about 3,900. This is a Discord limitation.
-
-        Example:
-        ```category:Important Items
-        Peacock Ore*927
-        Lignum Vitae Logs*1800
-        category:Cheap Items
-        Gold Ore*87```
-        """
-        confirm_code = random.randint(1000,9999)
-        embed=discord.Embed(
-            title=":warning: Dangerous Command!",
-            description=f"You are about to create a new list. Doing this will __**reset any previous list data**__, and permanently disable adding or removing from previous lists.\nThis action is __**irreversible**__\n\nTo confirm your action, please type the following numbers: `{confirm_code}`", 
+    async def on_submit(self, interaction: discord.Interaction):
+        if str(self.confirm_message) != str(self.confirm_num):
+            embed=discord.Embed(
+            title=":x: Action Cancelled",
+            description=f"The previous list was not deleted because the confirmation check was failed\n(Wrong number typed).",
             color=0xff0000
-        )
-        embed.set_footer(text="Type 'cancel' to cancel | Action will time out in 30 seconds")
-        msg = await ctx.send(embed=embed)
-        invalid = True
-        while invalid:
-            try:
-                confirmation = await self.bot.wait_for("message", check=lambda message: message.author == ctx.author, timeout=30)
-            except asyncio.TimeoutError:
-                embed=discord.Embed(
-                    title="Cancelled: Action timed out.",
-                    color=0xff0000
-                )
-                await msg.edit(embed=embed)
-                invalid = False
-                return
-            if confirmation.content == f"{confirm_code}":
-                invalid = False
-            elif confirmation.content.lower() == "cancel":
-                embed=discord.Embed(
-                    title="Cancelled: Cancelled by user.",
-                    color=0xff0000
-                )
-                await msg.edit(embed=embed)
-                invalid = False
-                return
-            else:
-                embed=discord.Embed(
-                    title=":x: Invalid input",
-                    description="Please try again.",
-                    color=0xff0000
-                )
-                await msg.edit(embed=embed)
-        embed=discord.Embed(
-            title="Data Reset.",
-            description=f"Please send a properly formatted message to create a new list. If you don't know the correct formatting, you can use `{ctx.clean_prefix}help list create`. This command will time out in 30 seconds.", 
-            color=0x00ff00
-        )
-        await msg.edit(embed=embed)
-        try:
-            list_str = await self.bot.wait_for("message", check=lambda message: message.author == ctx.author, timeout=30)
-        except asyncio.TimeoutError:
-            embed=discord.Embed(
-                title="Cancelled: Action timed out.",
-                color=0xff0000
             )
-            await msg.edit(embed=embed)
+            embed.add_field(name="Here's the list string you submitted:", value=f"```{self.list_str}```")
+            embed.set_footer(text="If this was a mistake, please try again.")
+            await interaction.response.send_message(embed=embed, ephemeral=True)
             return
-        embed=discord.Embed(
-            title="External Links",
-            description=f"Send a link to an external listing program such as Teamcraft. Reply with 'None' if there is no link.",
-            color=0x00ff00
-        )
-        await msg.edit(embed=embed)
-        try:
-            teamcraft_link = await self.bot.wait_for("message", check=lambda message: message.author == ctx.author, timeout=30)
-        except asyncio.TimeoutError:
-            embed=discord.Embed(
-                title="Cancelled: Action timed out.",
-                color=0xff0000
-            )
-            await msg.edit(embed=embed)
-            return
-        if teamcraft_link.content.lower() != "none":
-            teamcraft_link = teamcraft_link.content
-            await config.guild(ctx.guild).teamcraft.set(teamcraft_link)
-        else:
-            await config.guild(ctx.guild).teamcraft.set("")
-        list_str = list_str.content
-        embed=discord.Embed(
-            title="Checking data formatting...",
-            description=f"If any errors are found, a message will be sent with the errors and what line they are on.",
-            color=0x00ff00
-        )
-        await msg.edit(embed=embed)
-        await asyncio.sleep(1)
+        list_str = str(self.list_str)
         invalid_format = await self.check_format(list_str)
-        if invalid_format != "None":
+        if invalid_format != "":
             embed=discord.Embed(
             title=":x: Formatting error",
             description=f"{invalid_format}",
             color=0xff0000
             )
-            await msg.edit(embed=embed)
+            embed.add_field(name="Here's what you submitted:", value=f"```{list_str}```")
+            embed.set_footer(text="Please fix these errors and try again.")
+            await interaction.response.send_message(embed=embed)
             return
         category_split = list_str.split("category:")
         category_lists = []
@@ -252,16 +182,55 @@ class Gathering(Cog):
         for lists in category_lists:
             while "" in lists:
                 lists.remove("")
-        await config.guild(ctx.guild).category_list.set(category_lists)
-        await self.gen_embed(ctx, category_lists, msg)
+        await config.guild(interaction.guild).category_list.set(category_lists)
+        await self.gen_embed(interaction, category_lists)
 
-    async def gen_embed(self, ctx, category_lists, msg):
+    async def check_format(self, list_str: str):
+        """Attempts to notify of errors in formatting."""
+        invalid_format = ""
+        if list_str[:9] != "category:":
+            invalid_format += "Error on line 1: List must start with 'category:'. Please use `,help list create` for an example of the correct formatting.\n"
+        if "\n" not in list_str:
+            invalid_format += "Error on line 2: List must have at least one item. Please use `,help list create` for an example of the correct formatting.\n"
+        line_split = list_str.split("\n")
+        loopnum = 0
+        category_count = 0
+        for lines in line_split:
+            loopnum = loopnum + 1
+            try:
+                if lines[:9] == "category:":
+                    category_count = category_count + 1
+                    if category_count > 24:
+                        return "You have too many categories. The maximum number of categories is 24."
+                    continue
+            except:
+                pass
+            if len(list(lines.split("*"))) != 2:
+                invalid_format += f"Error on line {loopnum}: Expected 2 arguments: name, amount. Received {len(list(lines.split('*')))} arguments. Please use `,help list create` for an example of the correct formatting.\n"
+            if len(lines.split("|")) > 1:
+                item = lines.split("*")
+                extra = item[1].split("|")
+                item[1] = extra[0]
+                while len(extra) < 3:
+                    extra.append(0)
+                if type(extra[1]) is str:
+                    extra[2] = extra[1]
+                    extra[1] = 1
+                if extra[2] not in ['special', 1]:
+                    invalid_format += f"Error on line {loopnum}: '{extra[2]}' is not a valid item type. Please use `,help list create` for a list of all valid item types.\n"
+                try:
+                    float(extra[1])
+                except:
+                    invalid_format += f"Error on line {loopnum}: '{extra[1]}' is not a valid contribution multiplier. Must be a number. Please use `,help list create` for an example of the correct formatting.\n"
+        return invalid_format
+
+    async def gen_embed(self, interaction: discord.Interaction, category_lists):
         """Generates a new embed for the list"""
         total_needed = 0
         category_count = len(category_lists)
-        link = await config.guild(ctx.guild).teamcraft()
+        link = await config.guild(interaction.guild).teamcraft()
         if link != "":
-            embed=discord.Embed(title="Production List", description=f"Please type `/list` to see avaliable commands.\n\n[Teamcraft Link]({link})")
+            embed=discord.Embed(title="Production List", description=f"Please type `/list` to see avaliable commands.\n\n[External Link]({link})")
         else:
             embed=discord.Embed(title="Production List", description=f"Please type `/list` to see avaliable commands.")
         loopnum = 0
@@ -286,51 +255,13 @@ class Gathering(Cog):
         for items in item_only_list:
             gathered_list.append(0)
         embed.set_footer(text=f"0% Completed (0/{total_needed} items)")
-        await msg.edit(embed=embed)
-        await config.guild(ctx.guild).list_msg_channel.set(msg.channel.id)
-        await config.guild(ctx.guild).list_msg_id.set(msg.id)
-        await config.guild(ctx.guild).gathered.set(gathered_list)
-        await config.guild(ctx.guild).needed.set(needed_list)
+        await interaction.response.send_message(embed=embed)
+        inter_msg = await interaction.original_message()
+        await config.guild(interaction.guild).list_msg_channel.set(interaction.channel_id)
+        await config.guild(interaction.guild).list_msg_id.set(inter_msg.id)
+        await config.guild(interaction.guild).gathered.set(gathered_list)
+        await config.guild(interaction.guild).needed.set(needed_list)
         return
-
-    async def check_format(self, list_str):
-        """Attempts to notify of errors in formatting."""
-        invalid_format = "None"
-        if list_str[:9] != "category:":
-            invalid_format = "Error on line 1: List must start with 'category:'. Please use `,help list create` for an example of the correct formatting."
-        if "\n" not in list_str:
-            invalid_format = "Error on line 2: List must have at least one item. Please use `,help list create` for an example of the correct formatting."
-        line_split = list_str.split("\n")
-        loopnum = 0
-        category_count = 0
-        for lines in line_split:
-            loopnum = loopnum + 1
-            try:
-                if lines[:9] == "category:":
-                    category_count = category_count + 1
-                    if category_count > 24:
-                        return "You have too many categories. The maximum number of categories is 24."
-                    continue
-            except:
-                pass
-            if len(list(lines.split("*"))) != 2:
-                invalid_format = f"Error on line {loopnum}: Expected 2 arguments: name, amount. Received {len(list(lines.split('*')))} arguments. Please use `,help list create` for an example of the correct formatting."
-            if len(lines.split("|")) > 1:
-                item = lines.split("*")
-                extra = item[1].split("|")
-                item[1] = extra[0]
-                while len(extra) < 3:
-                    extra.append(0)
-                if type(extra[1]) is str:
-                    extra[2] = extra[1]
-                    extra[1] = 1
-                if extra[2] not in ['special', 1]:
-                    invalid_format = f"Error on line {loopnum}: '{extra[2]}' is not a valid item type. Please use `,help list create` for a list of all valid item types."
-                try:
-                    float(extra[1])
-                except:
-                    invalid_format = f"Error on line {loopnum}: '{extra[1]}' is not a valid contribution multiplier. Must be a number. Please use `,help list create` for an example of the correct formatting."
-        return invalid_format
 
 class List(app_commands.Group):
     """Production list commands."""
@@ -348,6 +279,24 @@ class List(app_commands.Group):
             app_commands.Choice(name=item.title(), value=item.title())
             for item in item_only_list if current.lower() in item.lower()
         ][:25]
+
+    @app_commands.command()
+    async def create(self, interaction: discord.Interaction):
+        """Create a new list."""
+        role_id = await config.guild(interaction.guild).manage_list()
+        if role_id == 0:
+            await interaction.response.send_message(f"This server doesn't seem to have a list manager role set. An admin should use [p]setlistmanager to set one.")
+            return
+        role = discord.utils.get(interaction.guild.roles, id=role_id)
+        if role not in interaction.user.roles:
+            embed=discord.Embed(
+            title=":no_entry: Insufficient Permissions",
+            description=f"You must have the {role.mention} role in order to use this command.",
+            color=0xff0000
+            )
+            await interaction.response.send_message(embed=embed)
+            return
+        await interaction.response.send_modal(ListModal())
 
     @app_commands.command()
     @app_commands.autocomplete(item=autocomplete_item)
@@ -456,7 +405,7 @@ class List(app_commands.Group):
         category_count = len(category_lists)
         link = await config.guild(guild).teamcraft()
         if link != "":
-            embed=discord.Embed(title="Production List", description=f"Please see `/list` for a list of commands.\n\n[Teamcraft Link]({link})")
+            embed=discord.Embed(title="Production List", description=f"Please see `/list` for a list of commands.\n\n[External Link]({link})")
         else:
             embed=discord.Embed(title="Production List", description=f"Please see `/list` for a list of commands.")
         loopnum = 0
