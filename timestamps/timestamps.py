@@ -78,13 +78,41 @@ async def timestamps(interaction: discord.Interaction, event_date: str, event_ti
         prev_len_list = await config.member(interaction.user).prev_lens()
         split_date = event_date.split("/")
         time_split = event_time.split(":")
+        # attempt to resolve 'am' or 'pm' times, can be done better but this works
+        try:
+            if time_split[1][2:] and time_split[1][2:].lower() in ['am', 'pm']:
+                if time_split[1][2:].lower() == 'am':
+                    time_split[0] = time_split[0]
+                    time_split[1] = time_split[1].lower().strip('am')
+                else:
+                    time_split[0] = int(time_split[0]) + 12
+                    time_split[1] = time_split[1].lower().strip('pm')
+        except IndexError:
+            if time_split[0][2:].lower() in ['am', 'pm']:
+                if time_split[0][2:].lower() == 'am':
+                    time_split[0] = time_split[0].lower().strip('am')
+                    time_split.append('00')
+                else:
+                    time_split[0] = int(time_split[0].lower().strip('pm')) + 12
+                    time_split.append('00')
+            else:
+                await interaction.response.send_message('The time you entered is not a valid time. (The time format is HH:MM. Example: 23:59)', ephemeral=True)
+                return
+        except:
+            await interaction.response.send_message('The time you entered is not a valid time. (The time format is HH:MM. Example: 23:59)', ephemeral=True)
+            return
+        if int(time_split[0]) in [12, 24]:
+            if int(time_split[0]) == 12:
+                time_split[0] = 0
+            else:
+                time_split[0] = 12
+        # why am i converting to int this way
         for num in split_date:
             index_num = split_date.index(num)
             split_date[index_num] = int(num)
         for num in time_split:
             index_num = time_split.index(num)
             time_split[index_num] = int(num)
-        datetime.date.today
         time_obj = datetime.datetime(split_date[2], split_date[1], split_date[0], time_split[0], time_split[1])
         utc_time = int(time.mktime(time_obj.timetuple()))
         if interaction.user.id in [129310857334226945, 127244746480549888, 378017188503879691] or interaction.user.id == 378017188503879691 and interaction.guild.id == 779821183285461052:
