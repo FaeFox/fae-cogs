@@ -87,6 +87,11 @@ async def timestamps(interaction: discord.Interaction, event_date: str, event_ti
                 else:
                     time_split[0] = int(time_split[0]) + 12
                     time_split[1] = time_split[1].lower().strip('pm')
+                if int(time_split[0]) in [12, 24]:
+                    if int(time_split[0]) == 12:
+                        time_split[0] = 0
+                    else:
+                        time_split[0] = 12
         except IndexError:
             if time_split[0][2:].lower() in ['am', 'pm']:
                 if time_split[0][2:].lower() == 'am':
@@ -95,17 +100,17 @@ async def timestamps(interaction: discord.Interaction, event_date: str, event_ti
                 else:
                     time_split[0] = int(time_split[0].lower().strip('pm')) + 12
                     time_split.append('00')
+                if int(time_split[0]) in [12, 24]:
+                    if int(time_split[0]) == 12:
+                        time_split[0] = 0
+                    else:
+                        time_split[0] = 12
             else:
                 await interaction.response.send_message('The time you entered is not a valid time. (The time format is HH:MM. Example: 23:59)', ephemeral=True)
                 return
         except:
             await interaction.response.send_message('The time you entered is not a valid time. (The time format is HH:MM. Example: 23:59)', ephemeral=True)
             return
-        if int(time_split[0]) in [12, 24]:
-            if int(time_split[0]) == 12:
-                time_split[0] = 0
-            else:
-                time_split[0] = 12
         # why am i converting to int this way
         for num in split_date:
             index_num = split_date.index(num)
