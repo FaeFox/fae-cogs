@@ -1,0 +1,16 @@
+{
+    "author": ["FaeFox (Fae#0009)"],
+    "install_msg": "Thanks for installing Scheduler! Please ensure that your bot has the applications.commands permission (granted from the discord developer portal before inviting your bot).\nThis cog contains only slash command(s).\n\nNOTE: Discord may take up to an hour to register slash commands.",
+    "name": "Scheduler",
+    "short": "Create recurring or single occurrence reminders for yourself.",
+    "description": "Create recurring or single occurrence reminders for yourself.",
+    "tags": [
+        "slash",
+        "dpy2",
+        "utility",
+        "reminder",
+        "schedule",
+        "scheduler"
+    ],
+    "end_user_data_statement": "This cog may store data such as member IDs and reminder text to follow up on reminders that a user sets."
+}
