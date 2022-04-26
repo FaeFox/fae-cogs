@@ -204,6 +204,11 @@ class Schedule(app_commands.Group):
                 else:
                     time_split[0] = int(time_split[0]) + 12
                     time_split[1] = time_split[1].lower().strip('pm')
+                if int(time_split[0]) in [12, 24]:
+                    if int(time_split[0]) == 12:
+                        time_split[0] = 0
+                    else:
+                        time_split[0] = 12
         except IndexError:
             if time_split[0][2:].lower() in ['am', 'pm']:
                 if time_split[0][2:].lower() == 'am':
@@ -212,6 +217,11 @@ class Schedule(app_commands.Group):
                 else:
                     time_split[0] = int(time_split[0].lower().strip('pm')) + 12
                     time_split.append('00')
+                if int(time_split[0]) in [12, 24]:
+                    if int(time_split[0]) == 12:
+                        time_split[0] = 0
+                    else:
+                        time_split[0] = 12
             else:
                 await interaction.response.send_message('I don\'t really understand what time you want me to remind you at. (The time format is HH:MM. Example: 23:59)', ephemeral=True)
                 return
