@@ -1,0 +1,9 @@
+{
+    "author": ["FaeFox"],
+    "install_msg": "Thank you for installing Duel!\nUse `[p]help Duel` to get all commands.",
+    "name": "Duel",
+    "short": "Fight your friends!",
+    "description": "Fight your friends in a battle to the death!",
+    "tags": ["game", "turn-based", "fantasy"],
+    "end_user_data_statement": "This cog does not store user data."
+}
