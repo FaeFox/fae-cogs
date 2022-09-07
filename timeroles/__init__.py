@@ -1,4 +1,4 @@
 from .timeroles import TimeRoles
 
-def setup(bot):
-    bot.add_cog(TimeRoles(bot))
+async def setup(bot):
+    await bot.add_cog(TimeRoles(bot))
