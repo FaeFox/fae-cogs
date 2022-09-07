@@ -5,7 +5,7 @@ from discord import app_commands
 from redbot.core.bot import Red
 from redbot.core.errors import CogLoadError
 
-from .temproles import temprole, TempRoles
+from .timeroles import temprole, TempRoles
 
 bot_id = 949857998753366056
 test_guild = 779821183285461052
