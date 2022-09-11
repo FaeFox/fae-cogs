@@ -1,0 +1,16 @@
+{
+    "author": ["FaeFox (Fae#0009)"],
+    "install_msg": "Thanks for installing Duel! Please ensure that your bot has the applications.commands permission (granted from the discord developer portal before inviting your bot).\nThis cog contains only slash command(s).\n\nNOTE: Discord may take up to an hour to register slash commands.",
+    "name": "Duel",
+    "short": "Fight your friends!",
+    "description": "Fight your friends!",
+    "tags": [
+        "slash",
+        "dpy2",
+        "game",
+        "fight",
+        "duel"
+    ],
+    "end_user_data_statement": "This cog may store data such as member IDs to track what class a user has chosen.",
+    "requirements": "pillow"
+}
