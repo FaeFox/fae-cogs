@@ -3,7 +3,6 @@ import discord
 import random
 import textwrap
 
-from typing_extensions import Self
 from PIL import Image, ImageFont, ImageDraw
 
 from io import BytesIO
@@ -118,7 +117,7 @@ class Player:
             return True
         return False
 
-    async def send_player_display(self, opponent: Self, view: discord.ui.View):
+    async def send_player_display(self, opponent, view: discord.ui.View):
         image = Image.new('RGBA', (500, 400), (255, 0, 0, 0))
         hp_image = await self.hp_image(self, opponent)
         passive_image = await self.color_text(text=self.chosen_class.Passive(self).text)
@@ -153,7 +152,7 @@ class Player:
         view.move2.disabled = False
         return msg
 
-    async def build_buff_str(self, player: Self):
+    async def build_buff_str(self, player):
         buff_str = ''
         if player.buffs != []:
             buff_str += '**__Buffs:__**\n'
@@ -245,7 +244,7 @@ class Player:
             y += height + 2
         return image
 
-    async def hp_image(self, player1: Self, player2: Self, sfg=(255,176,235), bg=(240,240,240)):
+    async def hp_image(self, player1, player2, sfg=(255,176,235), bg=(240,240,240)):
             """Progress: Float 0.0 - 1.0"""
             image = Image.open(str(bundled_data_path(self) /'hp_all.png'))
             over_image = Image.open(str(bundled_data_path(self) /'hp_all.png'))
