@@ -8,10 +8,12 @@ from PIL import Image, ImageFont, ImageDraw
 from io import BytesIO
 from redbot.core.data_manager import bundled_data_path
 
+
 __author__ = "FaeFox"
-# v1.0.0
-# TODO: Document any changes or additions.
-# TODO: Implement Siren, AI character class, more comments
+# v1.0.1
+# Added Button Compatibility to send_player_display
+# TODO: Implement Siren, AI character class
+
 
 class Player:
     def __init__(self, user: discord.Member, channel: discord.TextChannel, chosen_class, hp, attack, dodge, crit_chance, crit_damage) -> None:
@@ -138,7 +140,7 @@ class Player:
         temp.seek(0)
         embed = discord.Embed(title=f"Select a Move", description="*Text too small? Please click on the image to enlarge it.*\n*You have 60 seconds to choose a move.*", color=0xffff00) #creates embed
         embed.add_field(name=f"Buffs and Debuffs", value=f"__**YOU**__:\n{await self.build_buff_str(self)}\n\n**__Opponent__**:\n{await self.build_buff_str(opponent)}")
-        embed.set_footer(text="Type 1, 2, Ability 1, or Ability 2 to choose a move.")
+        embed.set_footer(text="Click the buttons below to select your move!")
         file = discord.File(temp, 'image.png')
         embed.set_image(url="attachment://image.png")
         msg = await self.channel.send(file=file, embed=embed)
@@ -281,7 +283,7 @@ class Player:
                 draw.ellipse((x+hp_width, y, x+height+hp_width, y+height), fill=fg)
                 draw.ellipse((x, y, x+height, y+height), fill=fg)
             #[P1] Paste PFP
-            asset = player1.user.avatar_url_as(size=128)
+            asset = player1.user.display_avatar.replace(size=128)
             data = BytesIO(await asset.read())
             pfp = Image.open(data)
             pfp.thumbnail((40, 40), Image.ANTIALIAS)
@@ -308,7 +310,7 @@ class Player:
                 draw.ellipse((x+hp_width, y, x+height+hp_width, y+height), fill=fg)
                 draw.ellipse((x, y, x+height, y+height), fill=fg)
             # [P2] Paste PFP
-            asset = player2.user.avatar_url_as(size=128)
+            asset = player2.user.display_avatar.replace(size=128)
             data = BytesIO(await asset.read())
             pfp = Image.open(data)
             pfp.thumbnail((40, 40), Image.ANTIALIAS)
@@ -332,15 +334,6 @@ class Player:
             # [P1] Draw HP
             text = f'{player1.hp}/{player1.max_hp}'
             x, y = 255, 127
-            # add outline
-            #draw.text((x-1, y-1), text, font=font, fill=outline)
-            #draw.text((x+1, y-1), text, font=font, fill=outline)
-            #draw.text((x-1, y+1), text, font=font, fill=outline)
-            #draw.text((x+1, y+1), text, font=font, fill=outline)
-            #draw.text((x-2, y-2), text, font=font, fill=outline)
-            #draw.text((x+2, y-2), text, font=font, fill=outline)
-            #draw.text((x-2, y+2), text, font=font, fill=outline)
-            #draw.text((x+2, y+2), text, font=font, fill=outline)
             # -----------
             draw.text((x, y), text, fill=bg, font=font_italic)
             # [P2] Draw player name
@@ -362,18 +355,33 @@ class Player:
             # [P2] Draw HP
             text = f'{player2.hp}/{player2.max_hp}'
             x, y = 118, 44
-            # add outline
-            #draw.text((x-1, y-1), text, font=font, fill=outline)
-            #draw.text((x+1, y-1), text, font=font, fill=outline)
-            #draw.text((x-1, y+1), text, font=font, fill=outline)
-            #draw.text((x+1, y+1), text, font=font, fill=outline)
-            #draw.text((x-2, y-2), text, font=font, fill=outline)
-            #draw.text((x+2, y-2), text, font=font, fill=outline)
-            #draw.text((x-2, y+2), text, font=font, fill=outline)
-            #draw.text((x+2, y+2), text, font=font, fill=outline)
-            # -----------
             draw.text((x, y), text, fill=bg, font=font_italic)
             return image
+
+class ButtonMoves(discord.ui.View):
+    def __init__(self, player: Player):
+        super().__init__()
+        self.timeout = 60
+        self.value = None
+        self.player = player
+
+    @discord.ui.button(label='Move 1', style=discord.ButtonStyle.green)
+    async def move1(self, interaction: discord.Interaction, button: discord.ui.Button):
+        if interaction.user == self.player.user:
+            await interaction.response.send_message('Selection locked in.', ephemeral=True)
+            self.value = {'user': self.player.user, 'message': '1'}
+            self.stop()
+        else:
+            await interaction.response.send_message("You do not have permission to use this button.")
+
+    @discord.ui.button(label='Move 2', style=discord.ButtonStyle.grey)
+    async def move2(self, interaction: discord.Interaction, button: discord.ui.Button):
+        if interaction.user == self.player.user:
+            await interaction.response.send_message('Selection locked in.', ephemeral=True)
+            self.value = {'user': self.player.user, 'message': '2'}
+            self.stop()
+        else:
+            await interaction.response.send_message("You do not have permission to use this button.")
 
 #class Siren:
 #    def __init__(self) -> None:
@@ -501,6 +509,12 @@ class Berserker:
             self.player.buffs.append(buff)
             move_dict = f"**{self.player.user.display_name}** used *Unwavering Will*! **{self.player.user.display_name}** gains a shield equivalent to **{self.player.shield} health** for __{self.shield_duration} turn(s)__."
             return move_dict
+        async def setup_view(self, view: discord.ui.View):
+            view.move1.label = self.name
+            # defensive move
+            view.move1.style = discord.ButtonStyle.blurple
+            view.move1.emoji = "🛡️"
+            return
 
     class Slot2:
         def __init__(self, player: Player) -> None:
@@ -536,6 +550,19 @@ class Berserker:
             #opponent.last_damage_taken = damage
             self.player.attack += self.scale_per_use
             return move_text
+        async def setup_view(self, view: discord.ui.View):
+            view.move2.label = self.name
+            # offensive move
+            view.move2.style = discord.ButtonStyle.green
+            view.move2.emoji = "⚔️"
+            return
+
+    async def get_views(self, player):
+        """Sets up how move selection buttons work. Returns `discord.ui.View`."""
+        view = ButtonMoves(player)
+        await self.Slot1(player).setup_view(view)
+        await self.Slot2(player).setup_view(view)
+        return view
 
 class Assassin:
     def __init__(self) -> None:
@@ -600,6 +627,12 @@ class Assassin:
             damage = await opponent.reduce_hp(damage=int(self.player.attack * self.attack_ratio))
             move_text = f"**{self.player.user.display_name}** senses an incoming attack and counter-attacks with *Fleeting Strike*! **{opponent.user.display_name}** takes **{damage} damage**.\n**{self.player.user.display_name}** braces for the incoming attack."
             return move_text
+        async def setup_view(self, view: discord.ui.View):
+            view.move1.label = self.name
+            # defensive move
+            view.move1.style = discord.ButtonStyle.blurple
+            view.move1.emoji = "🛡️"
+            return
 
     class Slot2:
         def __init__(self, player: Player) -> None:
@@ -635,6 +668,19 @@ class Assassin:
             damage = await opponent.reduce_hp(damage=int(self.player.attack * self.attack_ratio), true_damage=True)
             move_text = f"**{self.player.user.display_name}** used *Piercing Strike*! **{opponent.user.display_name}** takes **{damage} true damage**."
             return move_text
+        async def setup_view(self, view: discord.ui.View):
+            view.move2.label = self.name
+            # offensive move
+            view.move2.style = discord.ButtonStyle.green
+            view.move2.emoji = "⚔️"
+            return
+
+    async def get_views(self, player):
+        """Sets up how move selection buttons work. Returns `discord.ui.View`."""
+        view = ButtonMoves(player)
+        await self.Slot1(player).setup_view(view)
+        await self.Slot2(player).setup_view(view)
+        return view
 
 class Tank:
     def __init__(self) -> None:
@@ -701,6 +747,12 @@ class Tank:
                 return move_dict
             move_dict = f"**{self.player.user.display_name}** used *Iron Will*! ...nothing happens."
             return move_dict
+        async def setup_view(self, view: discord.ui.View):
+            view.move1.label = self.name
+            # defensive move
+            view.move1.style = discord.ButtonStyle.blurple
+            view.move1.emoji = "🛡️"
+            return
 
     class Slot2:
         def __init__(self, player: Player) -> None:
@@ -736,6 +788,19 @@ class Tank:
                 if buff["name"] == "Rage":
                     buff["value"] = 0
             return move_text
+        async def setup_view(self, view: discord.ui.View):
+            view.move2.label = self.name
+            # offensive move
+            view.move2.style = discord.ButtonStyle.green
+            view.move2.emoji = "⚔️"
+            return
+
+    async def get_views(self, player):
+        """Sets up how move selection buttons work. Returns `discord.ui.View`."""
+        view = ButtonMoves(player)
+        await self.Slot1(player).setup_view(view)
+        await self.Slot2(player).setup_view(view)
+        return view
 
 
 class Boss1:
