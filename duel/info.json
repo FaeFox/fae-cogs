@@ -12,5 +12,5 @@
         "duel"
     ],
     "end_user_data_statement": "This cog may store data such as member IDs to track what class a user has chosen.",
-    "requirements": "pillow"
+    "requirements": ['pillow']
 }
