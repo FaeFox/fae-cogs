@@ -11,25 +11,6 @@ from .game_classes import Player, Assassin, Tank, Berserker
 
 __author__ = "FaeFox"
 
-class ButtonMoves(discord.ui.View):
-    def __init__(self, player: Player):
-        super().__init__()
-        self.timeout = 60
-        self.value = None
-        self.player = player
-
-    @discord.ui.button(label='Move 1', style=discord.ButtonStyle.green)
-    async def move1(self, interaction: discord.Interaction, button: discord.ui.Button):
-        await interaction.response.send_message('Selection locked in.', ephemeral=True)
-        self.value = {'user': self.player.user, 'message': '1'}
-        self.stop()
-
-    @discord.ui.button(label='Move 2', style=discord.ButtonStyle.grey)
-    async def move2(self, interaction: discord.Interaction, button: discord.ui.Button):
-        await interaction.response.send_message('Selection locked in.', ephemeral=True)
-        self.value = {'user': self.player.user, 'message': '2'}
-        self.stop()
-
 class Duel(commands.Cog):
     """Duel Game by FaeFox"""
 
@@ -47,10 +28,42 @@ class Duel(commands.Cog):
         self.config.register_member(
             chosen_class = 'default'
         )
-        #star breaker, suguri, mio
 
     def get_priority(self, move):
         return move['attack'].priority
+
+    class ClassSelect(discord.ui.View):
+        def __init__(self, user: discord.User):
+            super().__init__()
+            self.timeout = 30
+            self.value = None
+            self.user = user
+
+        @discord.ui.select(
+            placeholder='Select a class',
+            min_values=1,
+            max_values=1,
+            options = [
+                discord.SelectOption(label="Tank", description="Play as the tank class."),
+                discord.SelectOption(label='Assassin', description='Play as the assassin class.'),
+                discord.SelectOption(label='Berserker', description='Play as the berserker class.')
+            ],
+            disabled=False,
+            row=None
+        )
+        async def class_select(self, interaction: discord.Interaction, select: discord.ui.Select):
+            if interaction.user == self.user:
+                embed=discord.Embed(
+                    title="✅Class set",
+                    description=f"You have chosen the {select.values[0]} class.",
+                    color=0x00ff00
+                )
+                await interaction.response.send_message(embed=embed)
+                self.value = select.values[0]
+                self.stop()
+            else:
+                await interaction.response.send_message("You do not have permission to use this button.")
+
 
     @commands.group(autohelp=True)
     @commands.guild_only()
@@ -83,22 +96,20 @@ class Duel(commands.Cog):
         pass
 
     @gameset.command(name="class")
+    @commands.cooldown(rate=1, per=30, type=commands.BucketType.user)
     async def gameset_class(self, ctx: commands.Context):
         """Set the class you want to play."""
-        def check(message: discord.Message):
-            if message.content in ['tank', 'berserker', 'assassin'] and message.author == ctx.author:
-                return True
-            return False
-        # wait for player responses
-        try:
-            embed=discord.Embed(title="Choose a Class", description="Please type the name of the class that you would like to play.\nValid responses: Tank, Berserker, Assassin\n\n*Note: Each class has its own move set. Please view classes using `,showclasses` before choosing.*", color=0x00ff00)
-            await ctx.send(embed=embed)
-            message = await self.bot.wait_for('message', check=check, timeout=60)
-        except:
-            await ctx.send('Command timed out.')
-        await self.config.member(ctx.author).chosen_class.set(f"{message.content.lower()}")
-        embed=discord.Embed(title="✅Class set", description=f"You have chosen the {message.content.title()} class.\n\nPlease note that each class has its own move set. __Please use `,showclasses {message.content.lower()}` at least once before participating.__ There will be limited time for reading during the move selection period.", color=0x00ff00)
-        await ctx.send(embed=embed)
+        view = self.ClassSelect(ctx.author)
+        msg = await ctx.send("Use the menu below to select your class.", view=view)
+        await view.wait()
+        if not view.value:
+            view.class_select.placeholder = "⌛Timed out"
+            view.class_select.disabled = True
+            await msg.edit(view=view)
+            return
+        view.class_select.disabled = True
+        await msg.edit(view=view)
+        await self.config.member(ctx.author).chosen_class.set(f"{view.value.lower()}")
 
     @commands.command()
     @commands.bot_has_permissions(embed_links=True)
@@ -169,12 +180,8 @@ class Duel(commands.Cog):
         # announce sudden death
         chaos_announced = False
         # set up button labels
-        p1_view = ButtonMoves(player1)
-        p1_view.move1.label = player1.chosen_class.Slot1(player1).name
-        p1_view.move2.label = player1.chosen_class.Slot2(player1).name
-        p2_view = ButtonMoves(player2)
-        p2_view.move1.label = player2.chosen_class.Slot1(player2).name
-        p2_view.move2.label = player2.chosen_class.Slot2(player2).name
+        p1_view = await player1.chosen_class.get_views(player1)
+        p2_view = await player2.chosen_class.get_views(player2)
         # BATTLE LOOP
         while player1.hp > 0 and player2.hp > 0:
             attack_queue = []
@@ -197,17 +204,23 @@ class Duel(commands.Cog):
                 # wait for player responses
                 try:
                     task = asyncio.get_running_loop().create_task(self.warn_before_timeout(attack_list=attack_selected, player1=player1, player2=player2, timeout_len=60), name='TimeoutWarning')
-                    p1_msg.edit(view=p1_view)
-                    p2_msg.edit(view=p2_view)
+                    await p1_msg.edit(view=p1_view)
+                    await p2_msg.edit(view=p2_view)
                     p1_task = asyncio.get_running_loop().create_task(p1_view.wait())
                     p2_task = asyncio.get_running_loop().create_task(p2_view.wait())
                     #await self.bot.wait_for('message', check=check, timeout=60)
                     start_time = time.time()
-                    while time.time() - start_time <= 60 and len(attack_selected < 2):
+                    while time.time() - start_time <= 60 and len(attack_selected) < 2:
                         if not p1_view.move1.disabled and p1_view.value:
                             attack_selected.append(p1_view.value)
+                            p1_view.move1.disabled = True
+                            p1_view.move2.disabled = True
+                            await p1_msg.edit(view=p1_view)
                         if not p2_view.move1.disabled and p2_view.value:
                             attack_selected.append(p2_view.value)
+                            p2_view.move1.disabled = True
+                            p2_view.move2.disabled = True
+                            await p2_msg.edit(view=p2_view)
                         await asyncio.sleep(0.5)
                     task.cancel()
                     p1_task.cancel()
@@ -332,8 +345,8 @@ class Duel(commands.Cog):
                 await player1.channel.send(embed=embed)
                 await player2.channel.send(embed=embed)
                 await asyncio.sleep(2)
-        # display winning message
-        # TODO: Add 'winning' description
+            await ctx.send("Battle has been force-stopped. Reason: `Debug mode is enabled.`")
+            break
         if player1.hp >= 1:
             embed = discord.Embed(title="You Win!", description=f'placehold')
             embed.set_footer(text=f"Your HP: {player1.hp} | Opponent HP: {player2.hp}")
