@@ -14,7 +14,7 @@ test_guild = None #779821183285461052
 async def setup(bot: Red) -> None:
     try:
         if not hasattr(bot, "tree"):
-            await bot.tree = app_commands.CommandTree(bot)
+            bot.tree = app_commands.CommandTree(bot)
     except AttributeError:
         raise CogLoadError("This cog requires at least discord.py 2.0.0a") from None
     asyncio.create_task(_setup(bot))
