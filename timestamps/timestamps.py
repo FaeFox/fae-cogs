@@ -19,7 +19,7 @@ config.register_member(
    prev_lens=[]
 )
 
-async def autocomplete_date(interaction: discord.Interaction, current: str, namespace: app_commands.Namespace) -> typing.List[app_commands.Choice[str]]:
+async def autocomplete_date(interaction: discord.Interaction, current: str) -> typing.List[app_commands.Choice[str]]:
     date_obj = datetime.date.today()
     last_day = calendar.monthrange(date_obj.year, date_obj.month)[1]
     curr_day = (calendar.weekday(date_obj.year, date_obj.month, date_obj.day)) + 1
@@ -51,14 +51,14 @@ async def autocomplete_date(interaction: discord.Interaction, current: str, name
         for date_dict in autocomplete_list
     ]
 
-async def autocomplete_time(interaction: discord.Interaction, current: str, namespace: app_commands.Namespace) -> typing.List[app_commands.Choice[str]]:
+async def autocomplete_time(interaction: discord.Interaction, current: str) -> typing.List[app_commands.Choice[str]]:
     autocomplete_list = await config.member(interaction.user).prev_times()
     return [
         app_commands.Choice(name=prev_time, value=prev_time)
         for prev_time in autocomplete_list if current in prev_time
     ]
 
-async def autocomplete_len(interaction: discord.Interaction, current: str, namespace: app_commands.Namespace) -> typing.List[app_commands.Choice[str]]:
+async def autocomplete_len(interaction: discord.Interaction, current: str) -> typing.List[app_commands.Choice[str]]:
     autocomplete_list = await config.member(interaction.user).prev_lens()
     if len(autocomplete_list) == []:
         autocomplete_list.append(1)
