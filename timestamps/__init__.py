@@ -32,7 +32,7 @@ async def _setup(bot: Red):
     await bot.tree.sync(guild=guild)
 
 # remove and resync tree
-await def teardown(bot: Red):
+async def teardown(bot: Red):
     if bot.user:
         assert isinstance(bot.tree, app_commands.CommandTree)
         if bot.user.id == bot_id:
